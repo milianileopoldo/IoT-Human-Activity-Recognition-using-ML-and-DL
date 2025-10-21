@@ -1,0 +1,5 @@
+Activity ID,Activity Date,Activity Name,Activity Type,Elapsed Time,Distance,Commute,Filename,Elapsed Time,Moving Time,Distance,Max Speed,Average Speed,Elevation Gain,Elevation Loss,Elevation Low,Elevation High,Max Grade,Average Grade,Calories,From Upload,Average Elapsed Speed,Dirt Distance,Total Steps,Carbon Saved
+6915841223,"Apr 1, 2022, 8:26:32 AM",Afternoon Ride,Ride,14358,8.44,FALSE,activities/6915841223.gpx,14358,3788,8440.3,14.506,2.228,87.4,88.6,-1.7,27,48.2,0,,1,0.588,751.4,,
+15978012696,"Sep 29, 2025, 3:51:34 PM",Chore Walk,Walk,6521,6.59,FALSE,activities/15978012696.gpx,6521,4064,6590.7,33.719,1.622,299.1,315.2,-3.4,54.3,50,-0.1,353,1,1.011,0,5040,0
+16021832307,"Oct 3, 2025, 3:09:49 PM",Budol Walk,Walk,4736,3.78,FALSE,activities/16021832307.gpx,4736,2811,3787.5,10.44,1.347,156.9,187.5,4,49.9,49.5,-0.2,203,1,0.8,0,3470,0
+16096895686,"Oct 10, 2025, 2:30:23 PM",Evening Walk,Walk,5132,3.97,FALSE,activities/16096895686.gpx,5132,2334,3978.5,11.743,1.705,105.9,111.3,-4.8,40.1,46.6,-0.2,213,1,0.775,4.3,4828,0

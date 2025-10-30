@@ -102,7 +102,7 @@ def update_key_and_rerun():
 # --- Streamlit Page Setup ---
 st.set_page_config(page_title="HAR Model", page_icon="🏃", layout="wide")
 st.title("🏃 Human Activity Recognition (HAR) Model")
-st.write("Upload your data below for training, and then use the prediction tool and analysis charts.")
+st.write("This HAR model built with Random Forest model is your instant digital coach! Just input your distance, speed, and time, and it will immediately predict your activity (like running or cycling). Best of all, it keeps you safe by highlighting potential overtraining risks—alerting you if your workouts look too intense—so you can train smarter, not harder.")
 st.markdown("---")
 
 # Initialize session state for the key
@@ -113,9 +113,12 @@ if 'fernet_key' not in st.session_state:
 # === SIDEBAR CONTENT: KEY MANAGEMENT AND ENCRYPTION/DECRYPTION ===
 # =========================================================================
 
+st.sidebar.title("Try out Symmetric Encryption!")
+st.sidebar.markdown("Symmetric cryptography is a simple and fast way to lock and unlock data using a single, shared secret key. To try it out follow the steps below:")
+
 # --- 1. Key Management Section (Sidebar) ---
-st.sidebar.header("1. 🔑 Key Management")
-st.sidebar.markdown("Generate or paste your **Fernet Key** here. This key is required for encrypting your data (Step 2) and decrypting it (Step 3).")
+st.sidebar.header("1.🔑 Generate Key ")
+st.sidebar.markdown("Generate or paste your **Fernet Key** here. This key is required for encrypting your data and decrypting it.")
 
 # The text input is initialized with the current fernet_key state.
 # Its value is implicitly stored under st.session_state.key_verifier
@@ -141,7 +144,7 @@ if st.session_state.fernet_key:
 st.sidebar.markdown("---")
 
 # --- 2. Data Encryption Utility (Sidebar) ---
-st.sidebar.header("2. 🔒 Encrypt Data Utility")
+st.sidebar.header("2. 🔒Encrypt Your Activity Dataset")
 st.sidebar.markdown("Convert your original CSV into a secure, encrypted file for later use.")
 
 if not st.session_state.fernet_key:
@@ -171,7 +174,7 @@ st.sidebar.markdown("---")
 
 # --- 3. Encrypted File Decryption Upload (Sidebar) ---
 st.sidebar.header("3. 🔓 Load Encrypted Data")
-st.sidebar.markdown("Upload the **encrypted** file and use your key for decryption.")
+st.sidebar.markdown("Upload your **encrypted** file and use your key for decryption.")
 
 encrypted_file = st.sidebar.file_uploader(
     "Upload Encrypted Strava Dataset (.csv)", 

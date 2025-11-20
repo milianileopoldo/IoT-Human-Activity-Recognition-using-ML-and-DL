@@ -1,5 +1,5 @@
-# --- Imports ---
-import pandas as pd
+# Imports
+import pandas as pd 
 import streamlit as st
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -9,172 +9,170 @@ from cryptography.fernet import Fernet
 from io import StringIO
 import numpy as np
 
-# --- Utility Functions (Kaggle Alignment) ---
 
+# Utility Functions
 def standardize_speed(speed):
-    """
-    KAGGLE ALIGNMENT: Standardizes speed units. 
-    If the speed is low (assumed to be m/s, e.g., < 25), converts it to m/min (m/s * 60).
-    The model trains on m/min units for speed features.
-    """
-    # A speed below 25 m/s (90 km/h) is realistically in m/s for running/walking/biking data
+    # Convert speed to m/min if it looks like m/s
     if speed < 25 and speed > 0:
         return speed * 60
     return speed
 
-# --- Fernet Encryption/Decryption Functions (Data Focus) ---
+
+# Fernet Encryption and Decryption
 def generate_key():
-    """Generates a new Fernet key."""
+    # Creates a new Fernet Key
     return Fernet.generate_key().decode()
 
+# Encrypt the bytes with Fernet Key
 def encrypt_data(key, data_bytes):
-    """Encrypts raw bytes data using Fernet."""
     f = Fernet(key.encode())
     return f.encrypt(data_bytes)
 
+# Decrypt the bytes with Fernet Key
 def decrypt_data(key, encrypted_bytes):
-    """Decrypts Fernet-encrypted bytes data."""
     try:
         f = Fernet(key.encode())
         return f.decrypt(encrypted_bytes)
     except Exception:
-        # Catch decryption errors (wrong key, corrupted data)
         return None
 
-# --- Calorie Estimation Function ---
+
+# Calorie Estimation Function 
 def estimate_calories(activity_type, moving_time, weight):
-    """
-    Calculates estimated calories burned using standard METs values (METs * Wt * Time_Hours).
-    moving_time is expected in minutes.
-    """
+    # Calculates calories using METs (Metabolic Equivalent of Task)
     time_in_hours = moving_time / 60.0
-    
-    # METs (Metabolic Equivalent of Task) values
+    # METs values
     if activity_type.lower() == 'walk': mets = 3.5 
     elif activity_type.lower() == 'run': mets = 9.0 
     elif activity_type.lower() == 'ride': mets = 6.0 
-    else: mets = 5.0 # Default MET
-        
+    else: mets = 5.0
     return mets * weight * time_in_hours
 
-# --- Overtraining Risk Check Function ---
-def check_overtraining_risk(activity_type, moving_time):
-    """
-    Assesses a single activity session for high volume.
-    moving_time is expected in minutes.
-    """
-    moving_time_minutes = moving_time 
 
+# Overtraining Risk Check Function
+def check_overtraining_risk(activity_type, moving_time):
+    # Assess overtraining risk
+    moving_time_minutes = moving_time 
     if activity_type in ['Run', 'Ride']:
         if moving_time_minutes > 60:
             return {
-                'risk': 'High Volume / Vigorous Alert',
+                'risk': 'Extensive Workout!',
                 'message': (
-                    "This is a vigorous activity session lasting over an hour. "
-                    "Ensure this fits your weekly schedule and prioritize recovery days "
-                    "to prevent potential overreaching."
+                    """This was an intense session. Prioritize recovery days and ensure this fits your weekly schedule to prevent injuries."""
                 )
             }
     elif activity_type == 'Walk':
         if moving_time_minutes > 120:
             return {
-                'risk': 'Long Duration Alert',
+                'risk': 'Extensive Workout!',
                 'message': (
-                    "This walking session exceeds two hours. While low impact, "
-                    "extended duration can lead to fatigue or joint stress. "
-                    "Listen to your body and ensure adequate rest."
+                    """This was an intense session. Prioritize recovery days and ensure this fits your weekly schedule to prevent injuries."""
                 )
             }
             
     return {'risk': 'Low Risk', 'message': 'The duration of this single activity session appears reasonable.'}
 
 
-# --- Button Callback Function for Key Generation ---
+# Key Management Callback
 def update_key_and_rerun():
-    """Generates a new key and forces the text input value to update."""
+    # Generate a new key and update the session
     new_key = generate_key()
-    # 1. Update the application's core state variable
     st.session_state.fernet_key = new_key
-    # 2. CRITICAL FIX: Update the text input widget's state variable directly
     st.session_state.key_verifier = new_key 
-    st.rerun()
 
-# --- Streamlit Page Setup ---
+
+# STREAMLIT PAGE
 st.set_page_config(page_title="HAR Model", page_icon="🏃", layout="wide")
-st.title("🏃 Human Activity Recognition (HAR) Model")
-st.write("Upload your data below for training, and then use the prediction tool and analysis charts.")
-st.markdown("---")
+st.title("Activity Prediction Model")
+st.write("""Welcome! This is the Activity Prediction Model interface. 
+         
+You can upload a dataset to train the model and generate activity predictions based on your data. 
 
-# Initialize session state for the key
+If you want to secure your file, use the Fernet Key tools in the sidebar. Just follow the steps provided to encrypt, decrypt, and load your dataset.""")
+
+
+
+# SIDEBAR PAGE (for optional security)
+
+# Start session key
 if 'fernet_key' not in st.session_state:
     st.session_state.fernet_key = ""
 
-# =========================================================================
-# === SIDEBAR CONTENT: KEY MANAGEMENT AND ENCRYPTION/DECRYPTION ===
-# =========================================================================
+# KEY SECTION 
+st.sidebar.header("KEY SECTION")
+st.sidebar.markdown("""
+                        1. Click **"Generate New Key"** to create a new key (if needed).
+                        2. Copy the generated key.
+                        3. Paste the same key when encrypting or decrypting your file.
+                    """)
 
-# --- 1. Key Management Section (Sidebar) ---
-st.sidebar.header("1. 🔑 Key Management")
-st.sidebar.markdown("Generate or paste your **Fernet Key** here. This key is required for encrypting your data (Step 2) and decrypting it (Step 3).")
-
-# The text input is initialized with the current fernet_key state.
-# Its value is implicitly stored under st.session_state.key_verifier
+# Key input bar
 key_input_bar = st.sidebar.text_input(
-    "Enter/Verify your Fernet Key:", 
+    "This is your key!", 
     value=st.session_state.fernet_key,
     key="key_verifier",
     help="Paste your saved key here. Typing/pasting automatically sets the key for the current session."
 )
-
-# After the text input has been rendered and its state potentially updated, 
-# we synchronize the core application state (fernet_key) with the widget's state (key_verifier)
 st.session_state.fernet_key = st.session_state.key_verifier
 
-# Use the callback function to handle button click and state update
+# Generate key button
 if st.sidebar.button("Generate New Key", key="gen_key_button", on_click=update_key_and_rerun):
-    pass # Logic is handled by the on_click callback
+    pass 
 
+# Key notifications
 if st.session_state.fernet_key:
     st.sidebar.info(f"**Current Active Key:** `{st.session_state.fernet_key}`")
-    st.sidebar.warning("⚠️ **Reminder:** Copy and save this key securely!")
+    st.sidebar.warning(" **Reminder:** Use the SAME key for both encrypting and decrypting the file")
 
 st.sidebar.markdown("---")
 
-# --- 2. Data Encryption Utility (Sidebar) ---
-st.sidebar.header("2. 🔒 Encrypt Data Utility")
-st.sidebar.markdown("Convert your original CSV into a secure, encrypted file for later use.")
 
+# ENCRYPTION SECTION
+st.sidebar.header("ENCRYPTION SECTION")
+st.sidebar.markdown("""
+                        1. Upload your file.
+                        2. Make sure you have an encryption key.
+                        3. Click **"Download Encrypted File"** to down the file.
+                    """)
+
+# Encrypting the file
 if not st.session_state.fernet_key:
     st.sidebar.warning("Please enter or generate a key in Step 1 to enable encryption.")
 else:
-    original_file = st.sidebar.file_uploader("Upload Original (Unencrypted) CSV", type=["csv"], key="encrypt_uploader")
+    original_file = st.sidebar.file_uploader("Upload a file to encrypt!", type=["csv"], key="encrypt_uploader")
 
+    # Encrypted file name
     if original_file:
         original_data_bytes = original_file.getvalue()
-        
-        # Encrypt the data immediately
+        original_name = original_file.name
+        base_name, file_ext = original_name.rsplit('.', 1) 
+        encrypted_file_name = f"{base_name}_ENCRYPTED.{file_ext}"
         encrypted_data = encrypt_data(st.session_state.fernet_key, original_data_bytes)
         
-        # Streamlit's download button provides the file directly
+        # Encrypted file download
         st.sidebar.download_button(
-            label="Encrypt & Download Secure File",
+            label="Download Encrypted File", 
             data=encrypted_data,
-            file_name="encrypted_strava_data.csv",
+            file_name=encrypted_file_name, 
             mime="application/octet-stream",
             key="encrypt_download_button_direct",
-            help="Click to encrypt the uploaded file and download the secure version."
+            help="Click to encrypt and download the secure version."
         )
-        st.sidebar.success("Encrypted file ready for download!")
-
+        st.sidebar.success(f"Encrypted File: **{encrypted_file_name}**")
 
 st.sidebar.markdown("---")
 
-# --- 3. Encrypted File Decryption Upload (Sidebar) ---
-st.sidebar.header("3. 🔓 Load Encrypted Data")
-st.sidebar.markdown("Upload the **encrypted** file and use your key for decryption.")
 
+# DECRYPTION SECTION 
+st.sidebar.header("DECRYPTION SECTION")
+st.sidebar.markdown("""
+                        1. Upload your encrypted file.
+                        2. Enter the same key used during encryption in the **KEY SECTION**.
+                    """)
+
+# Decrypt the file
 encrypted_file = st.sidebar.file_uploader(
-    "Upload Encrypted Strava Dataset (.csv)", 
+    "Upload encrypted file!", 
     type=["csv"], 
     key="decrypt_uploader",
     help="Upload the file secured in Step 2. The key from Step 1 is required for decryption."
@@ -183,92 +181,69 @@ encrypted_file = st.sidebar.file_uploader(
 st.sidebar.markdown("---")
 
 
-# =========================================================================
-# === MAIN TAB CONTENT: DATA LOAD, TRAINING, PREDICTION, AND EVALUATION ===
-# =========================================================================
-
-# --- 4. Data Loading Workflow (Main Tab) ---
-st.header("4. Load Data & Start Analysis")
-st.markdown("Upload your **original, unencrypted CSV** here for immediate analysis, or use the sidebar to load an encrypted file.")
+# MAIN UPLOAD PAGE
+st.header("Upload file to start prediction!")
 
 df = None
 analysis_key = st.session_state.fernet_key
 
-# --- Plain File Upload (Main Tab) ---
-plain_file = st.file_uploader(
-    "Upload Plain (Unencrypted) Strava CSV", 
-    type=["csv"], 
-    key="plain_uploader",
-    help="Upload the original file directly for immediate analysis."
-)
+# File upload (not encrypted)
+plain_file = st.file_uploader("Upload file for training!", type=["csv"], key="plain_uploader")
 
-file_to_process = None
-file_type = None
+file_to_process = encrypted_file if encrypted_file else plain_file
+file_type = 'ENCRYPTED' if encrypted_file else 'plain' if plain_file else None
 
-# Determine which file to process (encrypted takes precedence if both are uploaded)
-if encrypted_file:
-    file_to_process = encrypted_file
-    file_type = 'encrypted'
-elif plain_file:
-    file_to_process = plain_file
-    file_type = 'plain'
-
-# --- Data Loading and Initial Preparation ---
 if file_to_process:
-    
-    # Decryption/Loading Logic
-    if file_type == 'encrypted':
+    # Decrypt or load CSV 
+    if file_type == 'ENCRYPTED':
         if not analysis_key:
-            st.error("Cannot decrypt. Please ensure your Fernet key is active in the sidebar's Step 1.")
+            st.error("Cannot decrypt. Enter Fernet key.")
         else:
             encrypted_bytes = file_to_process.getvalue()
             decrypted_bytes = decrypt_data(analysis_key, encrypted_bytes)
-
-            if decrypted_bytes is not None:
+            if decrypted_bytes:
                 try:
                     decrypted_string = decrypted_bytes.decode('utf-8')
                     df = pd.read_csv(StringIO(decrypted_string))
-                    st.success("✅ Encrypted Dataset Decrypted and Loaded Successfully! Analyzing...")
+                    st.success("Encrypted file decrypted and loaded!")
                 except Exception as e:
-                    st.error(f"Error processing decrypted file. Key might be wrong or the file is corrupted. Error: {e}")
+                    st.error(f"Error processing decrypted file: {e}")
                     df = None
             else:
-                st.error("Decryption failed. Please ensure the key in the sidebar is correct for this encrypted file.")
-
+                st.error("Decryption failed. Check key.")
     elif file_type == 'plain':
         try:
             plain_bytes = file_to_process.getvalue()
-            plain_string = plain_bytes.decode('utf-8')
-            df = pd.read_csv(StringIO(plain_string))
-            st.success("✅ Plain Dataset Loaded Successfully! Analyzing...")
+            df = pd.read_csv(StringIO(plain_bytes.decode('utf-8')))
+            st.success("File loaded successfully!")
         except Exception as e:
-            st.error(f"Error reading plain CSV file: {e}")
+            st.error(f"Error reading dataset: {e}")
             df = None
 
-    # --- Data Cleaning and Feature Engineering (Post-Load) ---
+
+    # Data Cleaning and Feature Engineering 
     if df is not None and not df.empty:
         try:
-            # 1. Cleaning
+            # Cleaning
             df = df.loc[:, ~df.columns.duplicated()]
             required_cols = ['distance', 'average_speed', 'max_speed', 'type']
             df = df.dropna(subset=required_cols)
             
-            # 2. Unit Standardization (Kaggle Alignment: m/s -> m/min if needed)
+            # Unit Standardization 
             df['average_speed'] = df['average_speed'].apply(standardize_speed)
             df['max_speed'] = df['max_speed'].apply(standardize_speed)
 
-            # 3. Calculate moving_time (in minutes) from distance (m) and average_speed (m/min)
-            # Time (min) = (Distance (m) / Speed (m/min))
+            # Calculates moving_time (in minutes), from distance (m), and average_speed (m/min), time (min) = (Distance (m) / Speed (m/min))
             df['moving_time'] = df.apply(
                 lambda row: (row['distance'] / row['average_speed']) if row['average_speed'] > 0 else 0,
                 axis=1
             )
             
-            # 4. Feature Creation (Ratio is unit agnostic as long as units are consistent)
+            # Feature Engineering for Intensity Ration: Diffrenciates activities based on movement  
             df['intensity_ratio'] = df['average_speed'] / df['max_speed']
             df['intensity_ratio_squared'] = df['intensity_ratio'] ** 2 
 
-            # 5. Target Labeling
+            # Target Labeling
             df['activity_label'] = df['type'].apply(lambda x: x if x in ['Walk', 'Run', 'Ride'] else 'Other')
             df = df[df['activity_label'] != 'Other']
 
@@ -284,13 +259,12 @@ if file_to_process:
             df = None
 
 
-# --- Model Training and Prediction Section ---
+# Model Training and Prediction
 if df is not None and not df.empty:
     
-    # --- Unified Model Training (Single Classifier) ---
-    st.header("5. Model Training Status")
+    st.header("Model Training:")
     
-    # KAGGLE ALIGNMENT: Include distance and moving_time as features
+    # Feature columns
     feature_columns = [
         'distance', 
         'moving_time',
@@ -300,11 +274,10 @@ if df is not None and not df.empty:
         'intensity_ratio_squared'
     ]
 
+    # Random Forest Training
     if all(col in df.columns for col in feature_columns):
         X = df[feature_columns]
         y = df['activity_label']
-        
-        # Use more robust parameters matching the notebook
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y) 
         
         unified_classifier = RandomForestClassifier(
@@ -315,25 +288,19 @@ if df is not None and not df.empty:
         )
         unified_classifier.fit(X_train, y_train)
 
-        st.success("✅ Random Forest Classifier (Unified 3-Class Model) trained successfully on your data (using distance, time, and speed features).")
-        
-        # --- Prepare for Prediction and Evaluation ---
+        st.success("Random Forest Model trained successfully on your data!")
         st.markdown("---")
-        st.header("6. Real-time Prediction & Overtraining Check")
+        st.header("Predict Activity & Overtraining Check")
 
-        # --- Integrated Prediction Function (Using the UNIFIED Model) ---
+        # Prediction Function
         def predict_activity_unified(distance, moving_time, avg_speed_input, max_speed_input):
-            
-            # CRITICAL: Apply the same standardization as the training data
+
             avg_speed = standardize_speed(avg_speed_input)
             max_speed = standardize_speed(max_speed_input)
-
             if max_speed == 0:
-                 max_speed = 0.1 # Prevent ZeroDivisionError for ratio calc
-
+                 max_speed = 0.1
             ratio = avg_speed / max_speed
             ratio_sq = ratio ** 2
-            
             features = pd.DataFrame([{
                 'distance': distance, 
                 'moving_time': moving_time,
@@ -345,61 +312,62 @@ if df is not None and not df.empty:
             
             return unified_classifier.predict(features)[0]
 
-        # --- User Input & Prediction ---
+        # User inputs
         col_dist, col_time, col_weight = st.columns(3)
         col_avg, col_max = st.columns(2)
 
         with col_dist:
             # Distance in meters
-            distance = st.number_input("Distance (m)", min_value=0.0, value=25000.0, step=1000.0, help="Total distance covered in meters (SIM_DISTANCE).")
+            distance = st.number_input("Distance (m)", min_value=0.0, value=0.0, step=1.0, help="Total distance covered in meters (SIM_DISTANCE).")
         with col_time:
-            # Moving Time in minutes (SIM_MOVING_TIME)
-            moving_time = st.number_input("Moving Time (min)", min_value=1.0, value=60.0, step=1.0, help="Total time spent moving in minutes (SIM_MOVING_TIME).")
+            # Moving Time in minutes 
+            moving_time = st.number_input("Moving Time (min)", min_value=0.0, value=0.0, step=1.0, help="Total time spent moving in minutes (SIM_MOVING_TIME).")
         with col_weight:
-            # Weight in kg for calorie calculation (SIM_USER_WEIGHT)
-            user_weight = st.number_input("Your Weight (kg)", min_value=10.0, value=75.0, step=5.0, help="Your body weight for calorie calculation (SIM_USER_WEIGHT).")
+            # Weight in kg for calorie calculation 
+            user_weight = st.number_input("Your Weight (kg)", min_value=0.0, value=0.0, step=1.0, help="Your body weight for calorie calculation (SIM_USER_WEIGHT).")
             
         with col_avg:
-            # Average speed in m/s (SIM_AVG_SPEED)
-            avg_speed = st.number_input("Average Speed (m/s)", min_value=0.1, value=6.94, step=0.1, help="The average speed for the activity, in meters per second (SIM_AVG_SPEED).")
+            # Average speed in m/s 
+            avg_speed = st.number_input("Average Speed (m/s)", min_value=0.0, value=0.0, step=1.0, help="The average speed for the activity, in meters per second (SIM_AVG_SPEED).")
         with col_max:
-            # Max speed in m/s (SIM_MAX_SPEED)
-            max_speed = st.number_input("Max Speed (m/s)", min_value=0.1, value=9.0, step=0.1, help="The peak speed achieved, in meters per second (SIM_MAX_SPEED).")
+            # Max speed in m/s 
+            max_speed = st.number_input("Max Speed (m/s)", min_value=0.0, value=0.0, step=1.0, help="The peak speed achieved, in meters per second (SIM_MAX_SPEED).")
 
-        if st.button("🚀 Predict Activity & Calories"):
+            # Predict activity button
+        if st.button("Predict Activity, Check Calories & Overtraining!"):
             
             if avg_speed > max_speed:
                 st.error("Average speed cannot exceed Max speed.")
             elif avg_speed <= 0 or max_speed <= 0:
                  st.error("Speed values must be greater than zero.")
             else:
+
                 # Prediction uses the full set of 4 user inputs
                 predicted_activity = predict_activity_unified(distance, moving_time, avg_speed, max_speed)
                 predicted_calories = estimate_calories(predicted_activity, moving_time, user_weight)
                 
                 overtraining_result = check_overtraining_risk(predicted_activity, moving_time)
 
-                st.success(f"🏃 **Predicted Activity:** {predicted_activity}")
-                st.info(f"🔥 **Estimated Calories Burned:** {predicted_calories:.2f} kcal")
+                st.success(f"**Predicted Activity:** {predicted_activity}")
+                st.info(f"**Estimated Calories Burned:** {predicted_calories:.2f} kcal")
 
-                st.subheader("Health Guidance")
                 if overtraining_result['risk'] != 'Low Risk':
-                    st.warning(f"🚨 **Overtraining Risk Check:** {overtraining_result['risk']}")
-                    st.markdown(f"**Guidance:** {overtraining_result['message']}")
+                    st.warning(f"**Overtraining Risk Check:** {overtraining_result['risk']}")
+                    st.markdown(f"**Observation:** {overtraining_result['message']}")
                 else:
-                    st.info(f"🧘 **Overtraining Risk Check:** {overtraining_result['risk']}")
-                    st.markdown(f"**Guidance:** {overtraining_result['message']}")
+                    st.info(f"**Overtraining Risk Check:** {overtraining_result['risk']}")
+                    st.markdown(f"**Observation:** {overtraining_result['message']}")
 
 
-                # --- Evaluation Section ---
+                # Evaluation
                 st.markdown("---")
-                st.header("7. Model Evaluation Results")
+                st.header("Model Evaluation Results")
                 
                 y_pred_unified = unified_classifier.predict(X_test)
                 accuracy = accuracy_score(y_test, y_pred_unified)
                 st.write(f"**Overall 3-Class Accuracy (Walk, Run, Ride):** {accuracy * 100:.2f}%")
                 
-                # --- Detailed Classification Metrics ---
+                # Metrics
                 st.subheader("Detailed Classification Metrics")
                 
                 classes = sorted(y_test.unique())
@@ -415,11 +383,11 @@ if df is not None and not df.empty:
                 
                 st.markdown("---")
                 
-                # --- Visualizations ---
+                # Visualizations
                 col_cm, col_imp = st.columns(2)
                 
                 with col_cm:
-                    st.subheader("🔷 Confusion Matrix")
+                    st.subheader("Confusion Matrix:")
                     
                     cm = confusion_matrix(y_test, y_pred_unified, labels=classes)
                     fig, ax = plt.subplots(figsize=(6, 6))
@@ -433,7 +401,7 @@ if df is not None and not df.empty:
                     st.pyplot(fig)
                 
                 with col_imp:
-                    st.subheader("📊 Feature Importance")
+                    st.subheader("Feature Importance:")
                     
                     importances = unified_classifier.feature_importances_
                     feature_names = X_train.columns

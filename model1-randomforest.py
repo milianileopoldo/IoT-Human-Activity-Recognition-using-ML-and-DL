@@ -87,7 +87,6 @@ st.set_page_config(page_title="HAR Model", page_icon="🏃", layout="wide")
 st.title("🏃 Human Activity Recognition (HAR) Model")
 st.write("This HAR model built with Random Forest model is your instant digital coach! Just input your distance, speed, and time, and it will immediately predict your activity (like running or cycling). Best of all, it keeps you safe by highlighting potential overtraining risks—alerting you if your workouts look too intense—so you can train smarter, not harder.")
 st.markdown("---")
-=======
 st.title("Activity Prediction Model")
 st.write("""Welcome! This is the Activity Prediction Model interface. 
          

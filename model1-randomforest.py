@@ -83,7 +83,7 @@ def update_key_and_rerun():
 
 # STREAMLIT PAGE
 st.set_page_config(page_title="HAR Model", page_icon="🏃", layout="wide")
-<<<<<<< HEAD:IOT1.py
+
 st.title("🏃 Human Activity Recognition (HAR) Model")
 st.write("This HAR model built with Random Forest model is your instant digital coach! Just input your distance, speed, and time, and it will immediately predict your activity (like running or cycling). Best of all, it keeps you safe by highlighting potential overtraining risks—alerting you if your workouts look too intense—so you can train smarter, not harder.")
 st.markdown("---")
@@ -92,7 +92,6 @@ st.title("Activity Prediction Model")
 st.write("""Welcome! This is the Activity Prediction Model interface. 
          
 You can upload a dataset to train the model and generate activity predictions based on your data. 
->>>>>>> 3555ecbef188f69a09cfb47344c9c8689d93f753:Model1 (Random Forest).py
 
 If you want to secure your file, use the Fernet Key tools in the sidebar. Just follow the steps provided to encrypt, decrypt, and load your dataset.""")
 
@@ -112,7 +111,7 @@ st.sidebar.markdown("""
                         3. Paste the same key when encrypting or decrypting your file.
                     """)
 
-<<<<<<< HEAD:IOT1.py
+
 st.sidebar.title("Try out Symmetric Encryption!")
 st.sidebar.markdown("Symmetric cryptography is a simple and fast way to lock and unlock data using a single, shared secret key. To try it out follow the steps below:")
 
@@ -122,9 +121,8 @@ st.sidebar.markdown("Generate or paste your **Fernet Key** here. This key is req
 
 # The text input is initialized with the current fernet_key state.
 # Its value is implicitly stored under st.session_state.key_verifier
-=======
+
 # Key input bar
->>>>>>> 3555ecbef188f69a09cfb47344c9c8689d93f753:Model1 (Random Forest).py
 key_input_bar = st.sidebar.text_input(
     "This is your key!", 
     value=st.session_state.fernet_key,
@@ -144,12 +142,9 @@ if st.session_state.fernet_key:
 
 st.sidebar.markdown("---")
 
-<<<<<<< HEAD:IOT1.py
 # --- 2. Data Encryption Utility (Sidebar) ---
 st.sidebar.header("2. 🔒Encrypt Your Activity Dataset")
 st.sidebar.markdown("Convert your original CSV into a secure, encrypted file for later use.")
-=======
->>>>>>> 3555ecbef188f69a09cfb47344c9c8689d93f753:Model1 (Random Forest).py
 
 # ENCRYPTION SECTION
 st.sidebar.header("ENCRYPTION SECTION")
@@ -186,12 +181,9 @@ else:
 
 st.sidebar.markdown("---")
 
-<<<<<<< HEAD:IOT1.py
 # --- 3. Encrypted File Decryption Upload (Sidebar) ---
 st.sidebar.header("3. 🔓 Load Encrypted Data")
 st.sidebar.markdown("Upload your **encrypted** file and use your key for decryption.")
-=======
->>>>>>> 3555ecbef188f69a09cfb47344c9c8689d93f753:Model1 (Random Forest).py
 
 # DECRYPTION SECTION 
 st.sidebar.header("DECRYPTION SECTION")

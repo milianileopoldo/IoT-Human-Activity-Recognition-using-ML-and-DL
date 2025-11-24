@@ -12,7 +12,7 @@ The application leverages a Random Forest model within a user-friendly Streamlit
 
 Experience the application firsthand by visiting our live deployment:
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](http://172.18.0.177:8501)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://har-model-by-group1.streamlit.app/)
 
 ## ✨ Features
 

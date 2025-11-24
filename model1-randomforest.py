@@ -83,10 +83,6 @@ def update_key_and_rerun():
 
 # STREAMLIT PAGE
 st.set_page_config(page_title="HAR Model", page_icon="🏃", layout="wide")
-
-st.title("🏃 Human Activity Recognition (HAR) Model")
-st.write("This HAR model built with Random Forest model is your instant digital coach! Just input your distance, speed, and time, and it will immediately predict your activity (like running or cycling). Best of all, it keeps you safe by highlighting potential overtraining risks—alerting you if your workouts look too intense—so you can train smarter, not harder.")
-st.markdown("---")
 st.title("Activity Prediction Model")
 st.write("""Welcome! This is the Activity Prediction Model interface. 
          
@@ -110,17 +106,6 @@ st.sidebar.markdown("""
                         3. Paste the same key when encrypting or decrypting your file.
                     """)
 
-
-st.sidebar.title("Try out Symmetric Encryption!")
-st.sidebar.markdown("Symmetric cryptography is a simple and fast way to lock and unlock data using a single, shared secret key. To try it out follow the steps below:")
-
-# --- 1. Key Management Section (Sidebar) ---
-st.sidebar.header("1.🔑 Generate Key ")
-st.sidebar.markdown("Generate or paste your **Fernet Key** here. This key is required for encrypting your data and decrypting it.")
-
-# The text input is initialized with the current fernet_key state.
-# Its value is implicitly stored under st.session_state.key_verifier
-
 # Key input bar
 key_input_bar = st.sidebar.text_input(
     "This is your key!", 
@@ -141,9 +126,6 @@ if st.session_state.fernet_key:
 
 st.sidebar.markdown("---")
 
-# --- 2. Data Encryption Utility (Sidebar) ---
-st.sidebar.header("2. 🔒Encrypt Your Activity Dataset")
-st.sidebar.markdown("Convert your original CSV into a secure, encrypted file for later use.")
 
 # ENCRYPTION SECTION
 st.sidebar.header("ENCRYPTION SECTION")
@@ -180,9 +162,6 @@ else:
 
 st.sidebar.markdown("---")
 
-# --- 3. Encrypted File Decryption Upload (Sidebar) ---
-st.sidebar.header("3. 🔓 Load Encrypted Data")
-st.sidebar.markdown("Upload your **encrypted** file and use your key for decryption.")
 
 # DECRYPTION SECTION 
 st.sidebar.header("DECRYPTION SECTION")

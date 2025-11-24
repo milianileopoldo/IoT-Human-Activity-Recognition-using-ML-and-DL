@@ -1,6 +1,6 @@
-# HAR MODEL 1 : Activity Prediction & Health Insights Web App
+# Activity Prediction & Health Insights Web App
 
-## HAR Model 1 addresses the need for accessible and secure activity analysis. 
+## Our HAR Model 1 addresses the need for accessible and secure activity analysis. 
 
 The application leverages a Random Forest model within a user-friendly Streamlit interface to predict physical activities like Walking, Running, and Riding. Beyond simple classification, it offers insights into health metrics and features an integrated cryptography system. A custom GUI provides a clear, visual comparison between encrypted and decrypted data, effectively educating users on the practical benefits and necessity of data security.
 
